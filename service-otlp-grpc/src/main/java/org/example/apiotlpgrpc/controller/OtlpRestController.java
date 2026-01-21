@@ -35,7 +35,7 @@ public class OtlpRestController {
     }
 
     /**
-     * Cas 2 : Erreur Standard)
+     * Cas 2 : Erreur Standard
      */
     @GetMapping("/api/risky")
     public String lancerTraitementRisque() {
@@ -55,7 +55,7 @@ public class OtlpRestController {
 
     /**
      * Cas 3 : Void
-     * Utile pour des tâches de fond qui ne renvoient pas de données métier.
+     * Tâches qui ne envoient pas de données métier.
      */
     @GetMapping("/api/notify")
     public String envoyerNotification() {

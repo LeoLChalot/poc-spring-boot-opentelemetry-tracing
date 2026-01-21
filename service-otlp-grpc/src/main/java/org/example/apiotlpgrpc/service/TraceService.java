@@ -37,7 +37,7 @@ public class TraceService {
     }
 
     /**
-     * Surcharge pour les méthodes void (qui ne retournent rien)
+     * Surcharge pour les méthodes void
      */
     public void wrapWithSpanVoid(String spanName, Consumer<Span> businessLogic) {
         wrapWithSpan(spanName, span -> {

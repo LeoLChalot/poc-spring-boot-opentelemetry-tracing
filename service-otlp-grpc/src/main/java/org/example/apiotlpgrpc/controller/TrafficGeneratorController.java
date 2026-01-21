@@ -12,17 +12,11 @@ public class TrafficGeneratorController {
     private final TraceService traceService;
     private final RestTemplate restTemplate;
 
-    // Injection du TraceService ET du RestTemplate instrumenté
     public TrafficGeneratorController(TraceService traceService, RestTemplate restTemplate) {
         this.traceService = traceService;
         this.restTemplate = restTemplate;
     }
 
-    /**
-     * Scénario complexe : Orchestration
-     * Ce endpoint va appeler 3 fois l'autre API séquentiellement.
-     * Cela va créer une trace en "cascade".
-     */
     @GetMapping("/api/orchestrate")
     public String scenarioComplexe() {
         // Span Parent "RACINE"

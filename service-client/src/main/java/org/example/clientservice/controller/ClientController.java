@@ -24,7 +24,6 @@ public class ClientController {
     public String callServiceA() {
         logger.info("Service B : Appel vers " + serviceAUrl);
 
-        // Utilisation de la variable dynamique
         String url = serviceAUrl + "/api/process?user=FromDocker";
         String response = restTemplate.getForObject(url, String.class);
 
