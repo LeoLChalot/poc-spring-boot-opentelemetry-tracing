@@ -38,7 +38,7 @@ graph TD
     subgraph DockerHost [Docker Compose Network]
         direction TB
         
-        %% Services Java (Notez les guillemets ajoutés ci-dessous)
+        %% Services Java
         Client["Service Client<br><i>(Service B)</i><br>Port: 8081"]:::javaService
         API["Service OTLP gRPC<br><i>(Service A)</i><br>Port: 8080"]:::javaService
         
