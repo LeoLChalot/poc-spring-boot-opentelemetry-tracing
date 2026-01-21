@@ -42,7 +42,6 @@ services:
       - OTEL_LOGS_EXPORTER=none
       - OTEL_METRICS_EXPORTER=none
       - OTEL_INSTRUMENTATION_JDBC_ENABLED=false
-      # CONFIGURATION METIER : On dit au client où trouver otlp-grcp dans le réseau Docker
       - SERVICE_A_URL=http://service-otlp-grpc:8080
     ports:
       - "8081:8081"
