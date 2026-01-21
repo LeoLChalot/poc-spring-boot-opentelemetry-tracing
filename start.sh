@@ -1,19 +1,25 @@
 #!/bin/bash
 
-echo "Mise en place de l'environnement"
+set -e
 
-# Build du Service A
-echo "Building Service OTLP gRPC"
+echo "Starting start.sh"
+
+# 1. Build du Service A
+echo "Building Service OTLP gRPC..."
 cd service-otlp-grpc
 ./mvnw clean package -DskipTests
 cd ..
 
-# Build du Service B
-echo "Building Service Client"
+# 2. Build du Service B
+echo "Building Service Client..."
 cd service-client
 ./mvnw clean package -DskipTests
 cd ..
 
+# 3 . Nettoyage
+echo "Cleaning old containers"
+docker rm -f jaeger-otel service-otlp-grpc service-client 2>/dev/null || true
+
+# 4. Démarrage
 echo "Starting Docker Compose"
-docker compose down
 docker compose up --build

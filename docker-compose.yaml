@@ -30,7 +30,7 @@ services:
     depends_on:
       - jaeger
 
-  # 3. Service B (Client / Orchestrateur)
+  # 3. Service B (Client)
   service-client:
     build: ./service-client
     container_name: service-client
