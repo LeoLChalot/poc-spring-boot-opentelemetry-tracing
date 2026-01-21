@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "🚀 Construction des projets..."
+echo "Mise en place de l'environnement"
 
 # Build du Service A
 echo "Building Service OTLP gRPC"
