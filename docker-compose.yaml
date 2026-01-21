@@ -1,0 +1,56 @@
+services:
+  # 1. Le backend d'observabilité (Jaeger)
+  jaeger:
+    image: cr.jaegertracing.io/jaegertracing/jaeger:2.14.0
+    container_name: jaeger-otel
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    ports:
+      - "16686:16686" # UI Web
+      - "4317:4317"   # Port OTLP gRPC
+    networks:
+      - otel-network
+
+  # 2. Service A (Backend)
+  service-otlp-grpc:
+    build: ./service-otlp-grpc
+    container_name: service-otlp-grpc
+    environment:
+      - SERVER_PORT=8080
+      # Configuration OTLP
+      - OTEL_SERVICE_NAME=service-otlp-grpc
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+      - OTEL_LOGS_EXPORTER=none
+      - OTEL_METRICS_EXPORTER=none
+      - OTEL_INSTRUMENTATION_JDBC_ENABLED=false
+    ports:
+      - "8080:8080"
+    networks:
+      - otel-network
+    depends_on:
+      - jaeger
+
+  # 3. Service B (Client / Orchestrateur)
+  service-client:
+    build: ./service-client
+    container_name: service-client
+    environment:
+      - SERVER_PORT=8081
+      # Configuration OTLP
+      - OTEL_SERVICE_NAME=service-client
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+      - OTEL_LOGS_EXPORTER=none
+      - OTEL_METRICS_EXPORTER=none
+      - OTEL_INSTRUMENTATION_JDBC_ENABLED=false
+      # CONFIGURATION METIER : On dit au client où trouver otlp-grcp dans le réseau Docker
+      - SERVICE_A_URL=http://service-otlp-grpc:8080
+    ports:
+      - "8081:8081"
+    networks:
+      - otel-network
+    depends_on:
+      - service-otlp-grpc
+
+networks:
+  otel-network:
+    driver: bridge

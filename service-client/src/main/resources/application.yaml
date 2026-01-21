@@ -1,0 +1,17 @@
+server:
+  port: 8081
+
+otel:
+  service:
+    name: "service-client"
+  exporter:
+    otlp:
+      endpoint: "http://localhost:4317"
+      protocol: grpc
+  logs:
+    exporter: none
+  metrics:
+    exporter: none
+  instrumentation:
+    jdbc:
+      enabled: false

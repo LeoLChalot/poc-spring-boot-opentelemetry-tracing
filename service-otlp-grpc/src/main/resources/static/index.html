@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OTLP Trace Generator</title>
+    <style>
+        :root {
+            /* Palette de base (Light Mode par défaut) */
+            --primary-color: #6366f1;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --info-color: #3b82f6;
+
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --border-color: #e5e7eb;
+            --input-bg: #ffffff;
+
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --border-radius: 12px;
+
+            /* Couleurs spécifiques aux statuts */
+            --status-loading-bg: #f9fafb;
+            --status-loading-text: #6b7280;
+            --status-success-bg: #ecfdf5;
+            --status-success-text: #065f46;
+            --status-error-bg: #fef2f2;
+            --status-error-text: #991b1b;
+        }
+
+        /* Variables pour le Dark Mode */
+        [data-theme="dark"] {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            --input-bg: #0f172a;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+            --status-loading-bg: rgba(255, 255, 255, 0.05);
+            --status-loading-text: #9ca3af;
+            --status-success-bg: rgba(16, 185, 129, 0.2);
+            --status-success-text: #34d399;
+            --status-error-bg: rgba(239, 68, 68, 0.2);
+            --status-error-text: #f87171;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 2rem 1rem;
+            line-height: 1.6;
+            /* Flex column pour centrer le container globalement si besoin */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* --- MODIFICATION FLEXBOX DU CONTAINER --- */
+        .container {
+            width: 100%;
+            max-width: 1000px; /* Élargi pour supporter 2 colonnes */
+            position: relative;
+
+            display: flex;       /* Active Flexbox */
+            flex-wrap: wrap;     /* Permet le retour à la ligne */
+            gap: 1.5rem;         /* Espace entre les colonnes/lignes */
+            justify-content: center; /* Centre les éléments */
+        }
+
+        /* Header & Toggle Button */
+        header {
+            text-align: center;
+            /* Force le header à prendre toute la largeur au dessus des colonnes */
+            flex: 0 0 100%;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .theme-toggle {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            transition: transform 0.2s, background-color 0.3s;
+            padding: 0;
+            z-index: 10;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1);
+            opacity: 1;
+        }
+
+        .theme-toggle svg {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
+
+        h1 {
+            font-size: 2.25rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #4f46e5 0%, #ec4899 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p.subtitle {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        /* --- MODIFICATION RESPONSIVE DES CARDS --- */
+        .card {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+            border: 1px solid var(--border-color);
+
+            /* Mobile First: Prend 100% de la largeur */
+            flex: 1 1 100%;
+
+            /* On enlève la margin-bottom car 'gap' s'en occupe */
+            margin-bottom: 0;
+
+            /* Assure que le contenu s'aligne bien verticalement */
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Vue Tablette et Desktop */
+        @media (min-width: 768px) {
+            .card {
+                /* 50% de la largeur - la moitié du gap (0.75rem) */
+                flex: 0 0 calc(50% - 0.75rem);
+            }
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .card h3 {
+            margin-top: 0;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-main);
+        }
+
+        .card p {
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
+            flex-grow: 1; /* Pousse le bouton vers le bas pour alignement */
+        }
+
+        .input-group {
+            margin-bottom: 1rem;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background-color: var(--input-bg);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s, box-shadow 0.2s, background-color 0.3s;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        button.action-btn {
+            cursor: pointer;
+            padding: 0.75rem 1.5rem;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: opacity 0.2s ease, transform 0.1s ease;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: auto; /* Colle le bouton en bas de la carte */
+        }
+
+        button.action-btn:active {
+            transform: scale(0.98);
+        }
+
+        button.action-btn:hover {
+            opacity: 0.9;
+        }
+
+        .btn-success { background-color: var(--success-color); }
+        .btn-danger { background-color: var(--danger-color); }
+        .btn-info { background-color: var(--info-color); }
+        .btn-primary { background-color: var(--primary-color); }
+
+        .response-area {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            border: 1px solid transparent;
+            min-height: 24px;
+            display: flex;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease, background-color 0.3s, color 0.3s;
+        }
+
+        .response-area:not(:empty) {
+            opacity: 1;
+        }
+
+        .status-loading {
+            color: var(--status-loading-text);
+            background-color: var(--status-loading-bg);
+            border-color: var(--border-color);
+            border-style: solid;
+        }
+        .status-success {
+            color: var(--status-success-text);
+            background-color: var(--status-success-bg);
+            border-color: var(--success-color);
+        }
+        .status-error {
+            color: var(--status-error-text);
+            background-color: var(--status-error-bg);
+            border-color: var(--danger-color);
+        }
+
+        @media (max-width: 639px) {
+            .theme-toggle {
+                position: relative;
+                align-self: flex-end;
+                margin-bottom: -40px;
+                z-index: 10;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <button id="themeToggle" class="theme-toggle" aria-label="Toggle Dark Mode">
+        <svg id="sunIcon" style="display: none;" viewBox="0 0 24 24">
+            <path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58a.996.996 0 00-1.41 0 .996.996 0 000 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37a.996.996 0 00-1.41 0 .996.996 0 000 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96a.996.996 0 000-1.41.996.996 0 00-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06zM7.05 18.36a.996.996 0 000 1.41.996.996 0 001.41 0l1.06-1.06c.39-.39.39-1.03 0-1.41s-1.03-.39-1.41 0l-1.06 1.06z"></path>
+        </svg>
+        <svg id="moonIcon" viewBox="0 0 24 24">
+            <path d="M9.37 5.51A7.35 7.35 0 009.1 7.5c0 4.08 3.32 7.4 7.4 7.4.68 0 1.35-.09 1.99-.27A7.014 7.014 0 0112 19c-3.86 0-7-3.14-7-7 0-2.93 1.81-5.45 4.37-6.49zM12 3a9 9 0 109 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 01-4.4 2.26 5.403 5.403 0 01-3.14-9.8c-.44-.06-.9-.1-1.36-.1z"></path>
+        </svg>
+    </button>
+
+    <header>
+        <h1>🚀 OTLP Trace Generator</h1>
+        <p class="subtitle">Generate traces in Jaeger by interacting with the scenarios below.</p>
+    </header>
+
+    <div class="card">
+        <h3>✅ Scenario 1: Standard Trace</h3>
+        <p>Simulates a classic successful processing flow with multiple spans.</p>
+        <div class="input-group">
+            <input type="text" id="username" placeholder="Enter User Name (e.g. Alice)" value="Alice">
+        </div>
+        <button class="action-btn btn-success" onclick="callApi('/api/process?user=' + document.getElementById('username').value, 'output1')">
+            Launch Process
+        </button>
+        <div id="output1" class="response-area"></div>
+    </div>
+
+    <div class="card">
+        <h3>🚨 Scenario 2: Risky Operation</h3>
+        <p>Simulates an operation that has a 50% chance of failure. Check Jaeger for red error spans.</p>
+        <button class="action-btn btn-danger" onclick="callApi('/api/risky', 'output2')">
+            Test Luck
+        </button>
+        <div id="output2" class="response-area"></div>
+    </div>
+
+    <div class="card">
+        <h3>📧 Scenario 3: Async Notification</h3>
+        <p>Simulates a "Fire and Forget" background task (Email, Push Notification).</p>
+        <button class="action-btn btn-info" onclick="callApi('/api/notify', 'output3')">
+            Send Notification
+        </button>
+        <div id="output3" class="response-area"></div>
+    </div>
+
+    <div class="card" style="border-left: 5px solid var(--primary-color);">
+        <h3>🕸️ Scenario 4: Distributed Orchestration</h3>
+        <p>Simulates a <b>Complex Trace</b>. This endpoint calls the others sequentially: <br/>
+            <i>Orchestrator &rarr; Process &rarr; Notify &rarr; Risky</i>.
+        </p>
+        <button class="action-btn btn-primary" onclick="callApi('/api/orchestrate', 'output4')">
+            Launch Distributed Chain
+        </button>
+        <div id="output4" class="response-area"></div>
+    </div>
+
+</div>
+
+<script>
+    // --- Dark Mode Logic ---
+    const themeToggleBtn = document.getElementById('themeToggle');
+    const sunIcon = document.getElementById('sunIcon');
+    const moonIcon = document.getElementById('moonIcon');
+    const htmlEl = document.documentElement;
+
+    const savedTheme = localStorage.getItem('theme');
+    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+    if (savedTheme === 'dark' || (!savedTheme && systemPrefersDark)) {
+        htmlEl.setAttribute('data-theme', 'dark');
+        showSun();
+    } else {
+        showMoon();
+    }
+
+    function showSun() {
+        sunIcon.style.display = 'block';
+        moonIcon.style.display = 'none';
+    }
+
+    function showMoon() {
+        sunIcon.style.display = 'none';
+        moonIcon.style.display = 'block';
+    }
+
+    themeToggleBtn.addEventListener('click', () => {
+        const currentTheme = htmlEl.getAttribute('data-theme');
+        if (currentTheme === 'dark') {
+            htmlEl.removeAttribute('data-theme');
+            localStorage.setItem('theme', 'light');
+            showMoon();
+        } else {
+            htmlEl.setAttribute('data-theme', 'dark');
+            localStorage.setItem('theme', 'dark');
+            showSun();
+        }
+    });
+
+    // --- Generic function to call the API ---
+    async function callApi(endpoint, outputId) {
+        const outputDiv = document.getElementById(outputId);
+
+        // Reset classes
+        outputDiv.className = 'response-area status-loading';
+        outputDiv.innerHTML = '<span>⏳ Processing request...</span>';
+
+        try {
+            const response = await fetch(endpoint);
+            const text = await response.text();
+
+            if (response.ok) {
+                outputDiv.className = 'response-area status-success';
+                outputDiv.textContent = '✅ ' + text;
+            } else {
+                outputDiv.className = 'response-area status-error';
+                outputDiv.textContent = '❌ Error ' + response.status + ': ' + text;
+            }
+        } catch (error) {
+            outputDiv.className = 'response-area status-error';
+            outputDiv.textContent = '❌ Network Error: ' + error.message;
+        }
+    }
+</script>
+</body>
+</html>
