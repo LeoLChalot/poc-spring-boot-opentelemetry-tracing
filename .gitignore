@@ -1,0 +1,16 @@
+# Fichiers compilés et JARs
+**/target/
+**.jar
+**.class
+
+# IDEs et Editeurs
+.idea/
+*.iml
+.vscode/
+*.ipr
+*.iws
+
+# Logs
+*.log
+
+!.mvn/wrapper/maven-wrapper.jar
