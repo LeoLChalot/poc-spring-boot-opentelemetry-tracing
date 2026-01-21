@@ -1,6 +1,6 @@
 # POC OpenTelemetry avec Spring Boot & Jaeger
 
-Ce projet démontre l'implémentation du **Distributed Tracing** (Traçage Distribué) entre deux microservices Spring Boot utilisant le protocole **OTLP** via **gRPC**.
+POC d'implémentation d'un **Traçage distribué**entre deux microservices Spring Boot en utilisant le protocole **OTLP** via **gRPC**.
 
 ## Architecture
 
