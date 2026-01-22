@@ -98,3 +98,29 @@ sequenceDiagram
     Aspect-->>Proxy: Retourne le résultat
     Proxy-->>User: Réponse HTTP 200
 ```
+
+```mermaid
+sequenceDiagram
+    participant U as Utilisateur
+    participant Client as Service Client (@Monitored)
+    participant Rest as RestTemplate
+    participant API as Service API
+
+    U->>Client: GET /api/chain
+    activate Client
+    Note right of Client: Span "orchestration_client"<br>TraceID: 123
+    
+    Client->>Rest: Appel HTTP vers Service A
+    
+    Note right of Rest: Injection Headers:<br>traceparent: 00-123-...
+    
+    Rest->>API: GET /api/process
+    activate API
+    Note right of API: Span "traitement_standard"<br>TraceID: 123 (Le même !)
+    
+    API-->>Rest: Réponse 200 OK
+    deactivate API
+    
+    Rest-->>Client: Retour String
+    deactivate Client
+```
