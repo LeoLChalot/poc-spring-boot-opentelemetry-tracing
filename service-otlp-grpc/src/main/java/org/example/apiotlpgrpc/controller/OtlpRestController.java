@@ -1,7 +1,9 @@
 package org.example.apiotlpgrpc.controller;
 
 import io.opentelemetry.api.trace.Span;
-import org.example.apiotlpgrpc.service.TraceService;
+import org.example.tracing.annotation.Monitored;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -12,45 +14,31 @@ import java.util.Random;
 @RestController
 public class OtlpRestController {
 
-    private final TraceService traceService;
     private final Random random = new Random();
-
-    public OtlpRestController(TraceService traceService) {
-        this.traceService = traceService;
-    }
+    private static final Logger logger = LoggerFactory.getLogger(OtlpRestController.class);
 
     /**
      * Cas 1 : Succès Standard
      */
     @GetMapping("/api/process")
-    public String lancerTraitement(@RequestParam(defaultValue = "anonyme") String user) {
-        return traceService.wrapWithSpan("traitement_standard", (Span span) -> {
-            span.setAttribute("app.user", user);
-            simulerLatence(100, 300); // Latence variable
-            span.addEvent("Étape 1 validée");
-            simulerLatence(50, 100);
-            span.addEvent("Étape 2 validée");
-            return "Traitement réussi pour " + user;
-        });
+    @Monitored("traitement_standard")
+    public String lancerTraitement(@RequestParam(defaultValue = "anonyme") String user) throws InterruptedException {
+        logger.info("Début du traitement métier pour {}", user);
+        Thread.sleep(200);
+        return "Traitement réussi pour " + user;
     }
 
     /**
      * Cas 2 : Erreur Standard
      */
     @GetMapping("/api/risky")
+    @Monitored("traitement_risque")
     public String lancerTraitementRisque() {
-        return traceService.wrapWithSpan("traitement_risque", (Span span) -> {
-            span.setAttribute("risk.level", "high");
-            simulerLatence(50, 150);
-
-            // Probabilité d'erreur aléatoire
-            if (random.nextBoolean()) {
-                throw new RuntimeException("Critical issues");
-            }
-
-            span.addEvent("Success");
-            return "Succès\n";
-        });
+        simulerLatence(50, 150);
+        if (random.nextBoolean()) {
+            throw new RuntimeException("Critical issues");
+        }
+        return "Succès\n";
     }
 
     /**
@@ -58,16 +46,14 @@ public class OtlpRestController {
      * Tâches qui ne envoient pas de données métier.
      */
     @GetMapping("/api/notify")
+    @Monitored("envoi_notification")
     public String envoyerNotification() {
-        traceService.wrapWithSpanVoid("envoi_notification", (Span span) -> {
-            span.setAttribute("notification.type", "EMAIL");
-            span.setAttribute("notification.recipient", "admin@example.com");
-
-            System.out.println("Envoi de l'email en cours...");
-            simulerLatence(200, 500);
-
-            span.addEvent("Email envoyé au serveur SMTP");
-        });
+        Span currentSpan = Span.current();
+        currentSpan.setAttribute("notification.type", "EMAIL");
+        currentSpan.setAttribute("notification.recipient", "admin@example.com");
+        System.out.println("Envoi de l'email en cours...");
+        simulerLatence(200, 500);
+        currentSpan.addEvent("Email envoyé au serveur SMTP");
         return "Notification envoyée.";
     }
 
