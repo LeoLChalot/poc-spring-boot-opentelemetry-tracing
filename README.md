@@ -24,6 +24,7 @@ POC d'implémentation d'un **Traçage distribué**entre deux microservices Sprin
 | Jaeger UI	| http://localhost:16686 | Visualisation des traces |
 | Service Client | http://localhost:8081 | Interface pour générer du trafic |
 | Service API | http://localhost:8080 | Backend (Appelé par le client) |
+| Tracing Dependency | | Dépendance de gestion des Spans
 
 ## Architecture
 ```mermaid
@@ -61,4 +62,39 @@ graph TD
     linkStyle 0,1 stroke:#6366f1,stroke-width:3px;
     linkStyle 2 stroke:#f9f,stroke-width:2px,stroke-dasharray: 5 5;
     linkStyle 3,4 stroke:#22c55e,stroke-width:2px,stroke-dasharray: 3 3;
+```
+
+## Tracing Management Dependency
+
+```mermaid
+sequenceDiagram
+    participant User as Utilisateur
+    participant Proxy as Proxy Spring (AOP)
+    participant Aspect as TracingAspect
+    participant Real as Controller
+    participant OTel as OpenTelemetry
+
+    User->>Proxy: Appel GET /api/process
+    Note over Proxy: Spring intercepte l'appel
+    Proxy->>Aspect: "Annotation @Monitored"
+    
+    rect rgb(240, 248, 255)
+        Note right of Aspect: AVANT
+        Aspect->>OTel: startSpan("traitement_standard")
+    end
+    
+    Aspect->>Real: joinPoint.proceed() (Exécute le code)
+    
+    activate Real
+    Real-->>Real: Thread.sleep()...
+    Real-->>Aspect: Retourne "Traitement réussi"
+    deactivate Real
+
+    rect rgb(255, 240, 240)
+        Note right of Aspect: APRÈS
+        Aspect->>OTel: span.end()
+    end
+    
+    Aspect-->>Proxy: Retourne le résultat
+    Proxy-->>User: Réponse HTTP 200
 ```
