@@ -64,6 +64,26 @@ graph TD
     linkStyle 3,4 stroke:#22c55e,stroke-width:2px,stroke-dasharray: 3 3;
 ```
 
+## Développement : Annotation @Monitored
+
+Ce projet utilise une approche déclarative. Au lieu de manipuler l'objet Tracer manuellement, nous utilisons une annotation personnalisée via la librairie app-tracing.
+
+Exemple d'utilisation :
+```java
+@GetMapping("/api/process")
+@Monitored("nom_du_span_metier") // <--- Génère le Span
+public String maMethode(@RequestParam String user) {
+    // arguments sont automatiquement ajoutés aux attributs du Span
+    return "Traitement métier pur"; 
+}
+```
+
+__L'aspect AOP gère automatiquement :__
+
+1. L'ouverture et la fermeture du Span.
+2. La capture des exceptions (statut ERROR).
+3. L'ajout des paramètres de la méthode comme attributs de trace.
+
 ## Tracing Management Dependency
 
 ```mermaid
